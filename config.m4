@@ -3,7 +3,7 @@ idnl config.m4 for extension opengl
 PHP_ARG_WITH(opengl, for opengl support,
 [  --with-opengl=DIR       Include OpenGL support])
 
-dnl CFLAGS="$CFLAGS -Wall -Wfatal-errors -framework GLUT -framework OpenGL"
+dnl CFLAGS="$CFLAGS -Wall -Wfatal-errors -framework OpenGL"
 CFLAGS="$CFLAGS -Wall -Wfatal-errors"
 
 if test "$PHP_OPENGL" != "no"; then
@@ -82,13 +82,12 @@ if test "$PHP_OPENGL" != "no"; then
   fi
   unset additional_libs
 
-  PHP_ADD_LIBRARY_WITH_PATH(glut, /usr/lib, OPENGL_SHARED_LIBADD)
   PHP_ADD_LIBRARY_WITH_PATH(GL, /usr/lib, OPENGL_SHARED_LIBADD)
 
   PHP_ADD_INCLUDE($OPENGL_DIR/include)
   PHP_ADD_INCLUDE(/System/Library/Frameworks/OpenGL.framework/Headers)
 
   PHP_SUBST(OPENGL_SHARED_LIBADD)
-  PHP_NEW_EXTENSION(opengl, php_convert.c php_glut.c php_opengl.c, $ext_shared)
+  PHP_NEW_EXTENSION(opengl, php_convert.c php_opengl.c, $ext_shared)
 fi
 

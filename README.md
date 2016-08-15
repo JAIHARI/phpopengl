@@ -1,17 +1,14 @@
 
 # PHP-OpenGL
 
-PHP bindings of the OpenGL and GLUT libraries.
+PHP bindings for the OpenGL library.
 
-Not all of the previously mentioned API is available on this extension. In order to keep the code small, maintainable and hopefully less buggy, it was decided to support only these subsets:
-
-- OpenGL: All but the functions that are part of the compatibility profile. (glRotate, glBegin, glLight, ...). Compatibility profile usage is discouraged in other platforms and this extension only let you use the modern (core) GL profile. 
-- GLUT: Only the API related to window management, input handling and main loop are available. Other functions (such as the one to render popup menus) are not available for the same reasons given before.
+Not all of the OpenGL API is available on this extension. In order to keep the code small, maintainable and hopefully less buggy, it was decided to support only the subset that is not part of the compatibility profile. (glRotate, glBegin, glLight, ...). Compatibility profile usage is discouraged in other platforms and this extension only let you use the modern (core) GL profile. 
 
 ## Requirements
 
-- PHP7
-- OpenGL and FreeGLUT libraries
+- PHP7 with the PHP-SDL extension
+- OpenGL libraries
 - Linux/MacOS (Windows support coming soon)
 
 ## Installation
@@ -25,7 +22,7 @@ pecl install phpopengl
 Or
 
 ```sh
-git clone git://github.com/phpopengl/extension.git --recursive phpopengl
+git clone git://github.com/ponup/phpopengl.git --recursive phpopengl
 cd phpopengl
 phpize
 ./configure --enable-opengl
@@ -38,21 +35,24 @@ echo extension=opengl.so | sudo tee /etc/php5/conf.d/opengl.ini
 
 ```php
 <?php
-glutInit($argc, $argv);
+SDL_Init(SDL_INIT_VIDEO);
 
-glutInitWindowSize(800, 600);
-glutInitWindowPosition(300, 100);
-glutCreateWindow('Basic PHP-OpenGL example');
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-echo glGetString(GL_VENDOR), PHP_EOL;
-echo glGetString(GL_RENDERER), PHP_EOL;
+$window = SDL_CreateWindow('3D in PHP', SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 512, 512, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+$context = SDL_GL_CreateContext($window);
 
-glutDisplayFunc(function() {
-    glClearColor(0, 0, .2, 1); 
-    glClear(GL_COLOR_BUFFER_BIT);
-    glutSwapBuffers();
-});
-glutMainLoop();
+SDL_GL_SetSwapInterval(1);
+
+glClearColor(1.0, 0.0, 0.0, 1.0);
+glClear(GL_COLOR_BUFFER_BIT);
+
+SDL_GL_SwapWindow($window);
+
+SDL_GL_DeleteContext($context);
+SDL_DestroyWindow($window);
+SDL_Quit();
 ```
 
 ## License

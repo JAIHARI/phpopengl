@@ -37,10 +37,7 @@
 #else
 #include <GL/gl.h>
 #include <GL/glext.h>
-#include <GL/freeglut.h>
 #endif
-
-#include "php_glut.h"
 
 void convert_gluint_array_to_zval(GLuint* array, GLsizei n, zval* val) {
     GLsizei i;
@@ -1274,7 +1271,7 @@ PHP_MINFO_FUNCTION(opengl) {
 
 zend_module_entry opengl_module_entry = {
     STANDARD_MODULE_HEADER,
-    "OpenGL",
+    "opengl",
     opengl_functions,
     PHP_MINIT(opengl),
     NULL,
@@ -1905,8 +1902,6 @@ PHP_MINIT_FUNCTION(opengl) {
     REGISTER_LONG_CONSTANT("GL_TEXTURE1", GL_TEXTURE1, CONST_CS | CONST_PERSISTENT);
 
     REGISTER_LONG_CONSTANT("GL_CLAMP_TO_EDGE", GL_CLAMP_TO_EDGE, CONST_CS | CONST_PERSISTENT);
-
-    PHP_MINIT(glut)(INIT_FUNC_ARGS_PASSTHRU);
 
     return SUCCESS;
 }
