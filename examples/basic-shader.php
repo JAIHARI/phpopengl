@@ -26,16 +26,15 @@ void main() {
 }
 SHADER;
 
-
 // https://open.gl/content/code/c2_triangle_elements.txt
-glutInit($argc, $argv);
-glutInitContextVersion(3, 1);
-glutInitContextProfile(GLUT_CORE_PROFILE);
-glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);
+SDL_Init(SDL_INIT_VIDEO);
 
-glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-glutInitWindowSize(800, 600);
-glutCreateWindow("PHP-OpenGL vertex arrays example");
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+$window = SDL_CreateWindow('Basic shader', SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+$context = SDL_GL_CreateContext($window);
 
 glGenVertexArrays(1, $vaos);
 $vao = array_pop($vaos);
@@ -93,7 +92,9 @@ $colAttrib = glGetAttribLocation($shaderProgram, "color");
 glEnableVertexAttribArray($colAttrib);
 glVertexAttribPointer($colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * 4, 2 * 4);
 
-$displayCallback = function() {
+$event = new SDL_Event;
+$quit = false;
+while(!$quit) {
     // Clear the screen to black
     glClearColor(0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -101,23 +102,30 @@ $displayCallback = function() {
     // Draw a rectangle from the 2 triangles using 6 indices
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 
-    glutSwapBuffers();
-};
-glutDisplayFunc($displayCallback);
+    SDL_GL_SwapWindow($window);
+    SDL_Delay(10);
 
-$reshapeCallback = function($w, $h) {
-    glViewport(0, 0, $w, $h);
-};
-glutReshapeFunc($reshapeCallback);
-
-glutMainLoop();
+    if(SDL_WaitEvent($event)) {
+        switch($event->type) {
+        case SDL_QUIT:
+            $quit = true;
+            break;
+        case SDL_KEYDOWN:
+            $quit = $event->key->keysym->sym === SDLK_ESCAPE;
+            break;
+        }
+    }
+}
 
 glDeleteProgram($shaderProgram);
 glDeleteShader($fragmentShader);
 glDeleteShader($vertexShader);
-
 glDeleteBuffers(1, $ebo);
 glDeleteBuffers(1, $vbo);
 
 glDeleteVertexArrays(1, $vao);
+
+SDL_GL_DeleteContext($context);
+SDL_DestroyWindow($window);
+SDL_Quit();
 

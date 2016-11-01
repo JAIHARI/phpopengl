@@ -12,12 +12,25 @@ use \Ponup\ddd\Shader;
 define('WIDTH', 800);
 define('HEIGHT', 600);
 
+SDL_Init(SDL_INIT_VIDEO);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+$window = SDL_CreateWindow('Lit model', SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+$context = SDL_GL_CreateContext($window);
+
+// Define the viewport dimensions
+glViewport(0, 0, WIDTH, HEIGHT);
+
+// OpenGL options
+glEnable(GL_DEPTH_TEST);
+
 // Camera
 $camera = new Camera(new vec3(0, 0, 3));
 $lastX  =  WIDTH  / 2.0;
 $lastY  =  HEIGHT / 2.0;
 $keys = array_fill_keys(range('a', 'z'), false);
-
 
 // Light attributes
 $lightPos = new vec3(1.2, 1.0, 2.0);
@@ -26,30 +39,13 @@ $lightPos = new vec3(1.2, 1.0, 2.0);
 $deltaTime = 0.0;   // Time between current frame and last frame
 $lastFrame = 0.0;   // Time of last frame
 
-// The MAIN function, from here we start the application and run the game loop
-    // Init GLFW
-glutInit($argc, $argv);
-glutInitContextVersion(3, 3);
-glutInitContextProfile(GLUT_CORE_PROFILE);
-glutInitContextFlags(GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
-
-glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-glutInitWindowSize(WIDTH, HEIGHT);
-glutCreateWindow('LearnOpengl');
-
-// Define the viewport dimensions
-glViewport(0, 0, WIDTH, HEIGHT);
-
-// OpenGL options
-glEnable(GL_DEPTH_TEST);
-
 $lightingShader = new Shader\Program;
 $lightingShader->add(new Shader\Vertex("shaders/basic_lighting.vs"));
 $lightingShader->add(new Shader\Fragment("shaders/basic_lighting.frag"));
 $lightingShader->compile();
 $lightingShader->link();
 
-$lampShader = new shader\Program;
+$lampShader = new Shader\Program;
 $lampShader->add(new Shader\Vertex("shaders/lamp.vs"));
 $lampShader->add(new Shader\Fragment("shaders/lamp.frag"));
 $lampShader->compile();
@@ -124,14 +120,11 @@ glBindBuffer(GL_ARRAY_BUFFER, $VBO);
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * 4, 0); // Note that we skip over the normal vectors
 glEnableVertexAttribArray(0);
 glBindVertexArray(0);
+$event = new SDL_Event;
 
-
-$displayCallback = function() use($lightPos, $camera, $containerVAO, $lightVAO) {
+$quit = false;
+while(!$quit) {
         // Calculate deltatime of current frame
-    $lightingShader = &$GLOBALS['lightingShader'];
-    $lampShader = &$GLOBALS['lampShader'];
-    $lastFrame = &$GLOBALS['lastFrame'];
-    $deltaTime = &$GLOBALS['deltaTime'];
     $currentFrame = microtime(true);
     $deltaTime = $currentFrame - $lastFrame;
     $lastFrame = $currentFrame;
@@ -191,26 +184,26 @@ $displayCallback = function() use($lightPos, $camera, $containerVAO, $lightVAO) 
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 
-    // Swap the screen buffers
-    glutSwapBuffers();
-};
 
-$onKeyDownCallback= function($key, $x, $y) 
-{
-    global $keys;
-    if ($key >= 0 && $key < 1024)
-    {
-        $keys[ $key ] = true;
+    if(SDL_PollEvent($event)) {
+        switch($event->type) {
+        case SDL_QUIT:
+            $quit = true;
+            break;
+        case SDL_KEYDOWN:
+            $keys[ $event->key->keysym->sym ] = true;
+            break;
+        case SDL_KEYUP:
+            $keys[ $event->key->keysym->sym ] = false;
+            break;
+
+        }
     }
-};
-$onKeyUpCallback= function($key, $x, $y) 
-{
-    global $keys;
-    if ($key >= 0 && $key < 1024)
-    {
-        $keys[ $key ] = false;
-    }
-};
+
+    // Swap the screen buffers
+    SDL_GL_SwapWindow($window);
+	SDL_Delay(100);
+}
 
 $mouse_callback= function($xpos, $ypos)
 {
@@ -234,23 +227,7 @@ $mouse_callback= function($xpos, $ypos)
     $camera->ProcessMouseMovement($xoffset, $yoffset);
 };
 
-glutPassiveMotionFunc($mouse_callback);
-glutKeyboardFunc($onKeyDownCallback);
-glutKeyboardUpFunc($onKeyUpCallback);
-
-    // Terminate GLFW, clearing any resources allocated by GLFW.
-
-    // Set the required callback functions
-glutDisplayFunc($displayCallback);
-$idleFunc = function() {
-    glutPostRedisplay();
-};
-glutIdleFunc($idleFunc);
-//$displayCallback();
-glutMainLoop();
-
-function do_movement()
-{
+function do_movement() {
     global $deltaTime;
     $camera = &$GLOBALS['camera'];
     $keys = &$GLOBALS['keys'];
@@ -268,4 +245,8 @@ function do_movement()
         $camera->ProcessKeyboard(Camera::RIGHT, $deltaTime);
     }
 }
+
+SDL_GL_DeleteContext($context);
+SDL_DestroyWindow($window);
+SDL_Quit();
 

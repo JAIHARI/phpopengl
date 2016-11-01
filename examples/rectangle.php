@@ -2,15 +2,14 @@
 
 require 'bootstrap.php';
 
-glutInit($argc, $argv);
-glutInitContextVersion(3, 3);
-glutInitContextProfile(GLUT_CORE_PROFILE);
+SDL_Init(SDL_INIT_VIDEO);
 
-glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-glutInitContextFlags(GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
-glutInitWindowSize(800, 600);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-glutCreateWindow('Rectangle');
+$window = SDL_CreateWindow('Rectangle', SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+$context = SDL_GL_CreateContext($window);
 
 $vertices = [
     +0.5, +.5, 0, // top right
@@ -61,40 +60,39 @@ $ebo = $ebos[0];
 
 glBindVertexArray($vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, $vbo);
-    glBufferData(GL_ARRAY_BUFFER, count($vertices) * 4, $vertices, GL_STATIC_DRAW);
+glBindBuffer(GL_ARRAY_BUFFER, $vbo);
+glBufferData(GL_ARRAY_BUFFER, count($vertices) * 4, $vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, $ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, count($indices) * 4, $indices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * 4, 0);
-    glEnableVertexAttribArray(0);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, $ebo);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, count($indices) * 4, $indices, GL_STATIC_DRAW);
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * 4, 0);
+glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+glBindBuffer(GL_ARRAY_BUFFER, 0);
 glBindVertexArray(0);
 
 //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-$displayFunc = function() use($shaderProgram, $vao) {
-    glClearColor(.2, .3, .3, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+glClearColor(.2, .3, .3, 1);
+glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram($shaderProgram);
-    glBindVertexArray($vao);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);  
-    glBindVertexArray(0);
+glUseProgram($shaderProgram);
+glBindVertexArray($vao);
+glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);  
+glBindVertexArray(0);
 
-    glutSwapBuffers();
-};
+SDL_GL_SwapWindow($window);
+SDL_Delay(2000);
 
-glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-
-$keyboardFunc = function($key, $x, $y) {
-    if(ord($key) === 27) {
-        glutLeaveMainLoop();
+$quit = false;
+while($quit) {
+    SDL_PollEvent($event);
+    if ($event->type == SDL_KEYDOWN && $event->key->keysym->sym == SDLK_ESCAPE) {
+            $quit = true;
     }
-};
+}
 
-glutDisplayFunc($displayFunc);
-glutKeyboardFunc($keyboardFunc);
-glutMainLoop();
+SDL_GL_DeleteContext($context);
+SDL_DestroyWindow($window);
+SDL_Quit();
 

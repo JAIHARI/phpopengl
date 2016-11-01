@@ -1,7 +1,6 @@
 <?php
 
-dl('sdl.so');
-dl('opengl.so');
+require 'bootstrap.php';
 
 function exitError($msg) {
     printf("%s: %s\n", $msg, SDL_GetError());
@@ -30,7 +29,6 @@ SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-/* Create our window centered at 512x512 resolution */
 $window = SDL_CreateWindow('Changing GL colors', SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     512, 512, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 if (!$window) /* Die if creation failed */

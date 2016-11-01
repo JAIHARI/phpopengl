@@ -10,13 +10,14 @@ use \Ponup\ddd\Shader;
 define('WIDTH', 800);
 define('HEIGHT', 600);
 
-glutInit($argc, $argv);
-glutInitContextVersion(3, 3);
-glutInitContextProfile(GLUT_CORE_PROFILE);
-glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-glutInitContextFlags(GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
-glutInitWindowSize(WIDTH, HEIGHT);
-glutCreateWindow('Php');
+SDL_Init(SDL_INIT_VIDEO);
+
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+$window = SDL_CreateWindow('Basic shader', SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+$context = SDL_GL_CreateContext($window);
 
 // Define the viewport dimensions
 glViewport(0, 0, WIDTH, HEIGHT);
@@ -103,9 +104,20 @@ glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, $width, $height, 0, GL_BGRA, GL_UNSIGNED_
 glGenerateMipmap(GL_TEXTURE_2D);
 glBindTexture(GL_TEXTURE_2D, 0);
 
+$event = new SDL_Event;
 // Game loop
-$displayFunc = function() use($texture1, $texture2, $shaderProgram, $VAO) {
+$quit = false;
+while(!$quit) {
     // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
+
+    if(SDL_PollEvent($event)) {
+        if($event->type === SDL_QUIT) {
+            $quit = true;
+        }
+        if($event->type == SDL_KEYDOWN) {
+            $quit = true;
+        }
+    }
 
     // Render
     // Clear the colorbuffer
@@ -140,19 +152,17 @@ $displayFunc = function() use($texture1, $texture2, $shaderProgram, $VAO) {
     glBindVertexArray(0);
 
     // Swap the screen buffers
-    glutSwapBuffers();
-};
+    SDL_GL_SwapWindow($window);
+    SDL_Delay(10);
+}
 
-$idleFunc = function() {
-    glutPostRedisplay();
-};
-
-glutDisplayFunc($displayFunc);
-glutIdleFunc($idleFunc);
-glutMainLoop();
-
+return;
 // Properly de-allocate all resources once they've outlived their purpose
 glDeleteVertexArrays(1, $VAO);
 glDeleteBuffers(1, $VBO);
 glDeleteBuffers(1, $EBO);
+
+SDL_GL_DeleteContext($context);
+SDL_DestroyWindow($window);
+SDL_Quit();
 

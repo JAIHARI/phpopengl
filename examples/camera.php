@@ -29,7 +29,7 @@ $keys = array_fill_keys(range('a', 'z'), false);
 $deltaTime = 0.0;   // Time between current frame and last frame
 $lastFrame = 0.0;   // Time of last frame
 
-$onKeyDownCallback= function($key, $x, $y) 
+$onKeyDownCallback = function($key, $x, $y) 
 {
     global $keys;
     if ($key >= 0 && $key < 1024)
@@ -79,7 +79,7 @@ $scroll_callback = function($wheel, $direction, $x, $y)
     if ($fov >= 45.0)
         $fov = 45.0;
 };
-$motion_callback= function($xpos, $ypos)
+$motion_callback = function($xpos, $ypos)
 {
     $yaw = &$GLOBALS['yaw'];
     $pitch = &$GLOBALS['pitch'];
@@ -164,14 +164,16 @@ $mouse_callback = function($button, $state, $xpos, $ypos)
     $GLOBALS['cameraFront'] = \glm\normalize($front);
 };
 
-glutInit($argc, $argv);
-glutInitContextVersion(3, 3);
-glutInitContextProfile(GLUT_CORE_PROFILE);
-glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-glutInitWindowSize(WIDTH, HEIGHT);
-glutCreateWindow('LearnOpengl');
+SDL_Init(SDL_INIT_VIDEO);
 
-glutSetCursor(GLUT_CURSOR_NONE); 
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+$window = SDL_CreateWindow('Camera', SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+$context = SDL_GL_CreateContext($window);
+
+#glutSetCursor(GLUT_CURSOR_NONE); 
 
 // Define the viewport dimensions
 glViewport(0, 0, WIDTH, HEIGHT);
@@ -306,7 +308,8 @@ glBindTexture(GL_TEXTURE_2D, 0);
 
 
 // Game loop
-$displayFunc = function() use($shaderProgram, $texture1, $texture2, $cameraUp, $VAO, $cubePositions)
+$quit = false;
+while(!$quit)
 {
     $cameraPos = &$GLOBALS['cameraPos'];
     $cameraFront = &$GLOBALS['cameraFront'];
@@ -369,24 +372,24 @@ $displayFunc = function() use($shaderProgram, $texture1, $texture2, $cameraUp, $
     glBindVertexArray(0);
 
     // Swap the screen buffers
-    glutSwapBuffers();
-};
+    SDL_GL_SwapWindow($window);
+	SDL_Delay(50);
+}
 
-$idleFunc = function() {
-    glutPostRedisplay();
-};
-
+/*
 glutKeyboardFunc($onKeyDownCallback);
 glutKeyboardUpFunc($onKeyUpCallback);
-glutDisplayFunc($displayFunc);
-glutIdleFunc($idleFunc);
 glutMouseWheelFunc($scroll_callback);
 glutMouseFunc($mouse_callback);
 glutMotionFunc($motion_callback);
-glutMainLoop();
+ */
 
 // Properly de-allocate all resources once they've outlived their purpose
 glDeleteVertexArrays(1, $VAO);
 glDeleteBuffers(1, $VBO);
+
+SDL_GL_DeleteContext($context);
+SDL_DestroyWindow($window);
+SDL_Quit();
 
 

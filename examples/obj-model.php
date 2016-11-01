@@ -10,16 +10,14 @@ use \Ponup\ddd\Shader;
 
 ini_set('memory_limit', '3096M');
 
-glutInit($argc, $argv);
-glutInitContextVersion(3, 3);
-glutInitContextProfile(GLUT_CORE_PROFILE);
+SDL_Init(SDL_INIT_VIDEO);
 
-glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_ALPHA);
-glutInitContextFlags(GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
-glutInitWindowSize(800, 600);
-glutInitWindowPosition(20,20);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-glutCreateWindow('Rectangle');
+$window = SDL_CreateWindow('Basic shader', SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+$context = SDL_GL_CreateContext($window);
 
 $line = false;
 
@@ -158,7 +156,9 @@ foreach($lightVertices2 as $l) {
     $lightVertices[] = $l->z;
 }
 
-
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+glEnable(GL_DEPTH_TEST);
 
 glGenBuffers(1, $vbo_lights); $vbo_light = $vbo_lights[0];
 glBindBuffer(GL_ARRAY_BUFFER, $vbo_light);
@@ -167,12 +167,21 @@ glBufferData(GL_ARRAY_BUFFER, count($lightVertices) * 4, $lightVertices, GL_STAT
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * 4, 0); // Note that we skip over the normal vectors
 glEnableVertexAttribArray(0);
 glBindVertexArray(0);
-glPolygonMode(GL_FRONT_AND_BACK, $line ? GL_LINE : GL_FILL);
 
-$displayFunc = function() use($shaderProgram, $vao, $lightVAO, $lampShader, $view, $proj, $lightPos, $indices) {
+$quit = false;
+while(!$quit) {
+	$event = new SDL_Event;
+	while(SDL_PollEvent($event)) {
+		if($event->type == SDL_QUIT) $quit = true;
+		elseif($event->type == SDL_KEYDOWN && $event->key->keysym->sym == 32) {
+			$line = !$line;
+		}
+	}
+
     glClearColor(.2, .3, .3, 1);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
+	glPolygonMode(GL_FRONT_AND_BACK, $line ? GL_LINE : GL_FILL);
     glUseProgram($shaderProgram);
 
     glBindVertexArray($vao);
@@ -195,27 +204,12 @@ $displayFunc = function() use($shaderProgram, $vao, $lightVAO, $lampShader, $vie
     glBindVertexArray($lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36); //8*4
     glBindVertexArray(0);
-    glutSwapBuffers();
-};
 
-glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+    SDL_GL_SwapWindow($window);
+    SDL_Delay(100);
+}
 
-$keyboardFunc = function($key, $x, $y) use(&$line) {
-    if(ord($key) === 27) {
-        glutLeaveMainLoop();
-    }
-    elseif(ord($key) === 32) {
-        $line = !$line;
-        
-        glPolygonMode(GL_FRONT_AND_BACK, $line ? GL_LINE : GL_FILL);
-        glutPostRedisplay();
-    }
-};
-
-glutDisplayFunc($displayFunc);
-glutKeyboardFunc($keyboardFunc);
-glEnable(GL_BLEND);
-glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-glEnable(GL_DEPTH_TEST);
-glutMainLoop();
+SDL_GL_DeleteContext($context);
+SDL_DestroyWindow($window);
+SDL_Quit();
 
